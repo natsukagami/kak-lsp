@@ -1277,6 +1277,22 @@ define-command texlab-build -docstring "Ask the texlab language server to build 
     lsp-send textDocument/build
 }
 
+# metals extensions
+declare-option -hidden range-specs lsp_metals_decoration
+
+define-command metals-decoration-enable -params 1 -docstring "metals-decoration-enable <scope>: enable Metals decoration for <scope>" %{
+    add-highlighter "%arg{1}/lsp_inlay_hints" replace-ranges lsp_inlay_hints
+    hook -group lsp-inlay-hints %arg{1} BufReload .* lsp-inlay-hints
+    hook -group lsp-inlay-hints %arg{1} NormalIdle .* lsp-inlay-hints
+    hook -group lsp-inlay-hints %arg{1} InsertIdle .* lsp-inlay-hints
+} -shell-script-candidates %{ printf '%s\n' buffer global window }
+
+define-command metals-decoration-disable -params 1 -docstring "metals-decoration-disable <scope>: disable Metals decoration for <scope>"  %{
+    remove-highlighter "%arg{1}/lsp_inlay_hints"
+    remove-hooks %arg{1} lsp-inlay-hints
+} -shell-script-candidates %{ printf '%s\n' buffer global window }
+
+
 # semantic tokens
 
 define-command lsp-semantic-tokens -docstring "lsp-semantic-tokens: Request semantic tokens" %{

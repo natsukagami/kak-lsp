@@ -2013,6 +2013,14 @@ fn dispatch_server_notification(
                 ),
             );
         }
+
+        // Metals
+        metals::PublishDecorations::METHOD => {
+            let params: metals::PublishDecorationsParams = params
+                .parse()
+                .expect("Failed to parse PublishDecorationsParams params");
+            metals::publish_decorations(meta, server_id, params, ctx)
+        }
         "telemetry/event" => {
             debug!(ctx.to_editor(), "{:?}", params);
         }
