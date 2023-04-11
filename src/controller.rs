@@ -10,6 +10,7 @@ use crate::capabilities;
 use crate::capabilities::initialize;
 use crate::context::*;
 use crate::diagnostics;
+use crate::language_features::metals::PublishDecorationsParams;
 use crate::language_features::{selection_range, *};
 use crate::language_server_transport;
 use crate::progress;
@@ -792,6 +793,12 @@ fn dispatch_server_notification(
                     editor_quote(&params.message)
                 ),
             );
+        }
+        metals::PublishDecorations::METHOD => {
+            let params: PublishDecorationsParams = params
+                .parse()
+                .expect("Failed to parse PublishDecorationsParams params");
+            metals::publish_decorations(meta, params, ctx)
         }
         "telemetry/event" => {
             debug!("{:?}", params);

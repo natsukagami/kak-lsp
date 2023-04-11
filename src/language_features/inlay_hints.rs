@@ -8,7 +8,7 @@ use serde::Deserialize;
 
 use crate::{
     capabilities::{attempt_server_capability, CAPABILITY_INLAY_HINTS},
-    context::{Context, RequestParams},
+    context::{Context, Document, RequestParams},
     markup::escape_kakoune_markup,
     position::lsp_position_to_kakoune,
     types::{EditorMeta, EditorParams, ServerName},
@@ -75,7 +75,26 @@ pub fn inlay_hints_response(
         Some(document) => document,
         None => return,
     };
-    let ranges = inlay_hints
+    let ranges = inlay_hints_to_ranges(document, inlay_hints, ctx);
+    let version = meta.version;
+    let command = formatdoc!(
+        "set-option buffer lsp_inlay_hints {version} {ranges}
+         set-option buffer lsp_inlay_hints_timestamp {version}"
+    );
+    let command = format!(
+        "evaluate-commands -buffer {} -- {}",
+        editor_quote(&meta.buffile),
+        editor_quote(&command)
+    );
+    ctx.exec(meta, command)
+}
+
+pub fn inlay_hints_to_ranges(
+    document: &Document,
+    inlay_hints: impl IntoIterator<Item = (ServerName, InlayHint)>,
+    ctx: &Context,
+) -> String {
+    inlay_hints
         .into_iter()
         .map(
             |(
@@ -113,16 +132,5 @@ pub fn inlay_hints_response(
                 ))
             },
         )
-        .join(" ");
-    let version = meta.version;
-    let command = formatdoc!(
-        "set-option buffer lsp_inlay_hints {version} {ranges}
-         set-option buffer lsp_inlay_hints_timestamp {version}"
-    );
-    let command = format!(
-        "evaluate-commands -buffer {} -- {}",
-        editor_quote(&meta.buffile),
-        editor_quote(&command)
-    );
-    ctx.exec(meta, command)
+        .join(" ")
 }
